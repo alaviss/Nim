@@ -148,8 +148,8 @@ proc closureIterSetupExc(e: ref Exception) {.compilerproc, inline.} =
 
 # some platforms have native support for stack traces:
 const
-  nativeStackTraceSupported* = (defined(macosx) or defined(linux)) and
-                              not NimStackTrace
+  supportedOs = defined(macosx) or defined(linux)
+  nativeStackTraceSupported* = (supportedOS or someGcc) and not NimStackTrace
   hasSomeStackTrace = NimStackTrace or
     defined(nativeStackTrace) and nativeStackTraceSupported
 
@@ -161,45 +161,85 @@ when defined(nativeStacktrace) and nativeStackTraceSupported:
       dli_fbase: pointer
       dli_sname: cstring
       dli_saddr: pointer
-
-  proc backtrace(symbols: ptr pointer, size: int): int {.
-    importc: "backtrace", header: "<execinfo.h>".}
   proc dladdr(addr1: pointer, info: ptr TDl_info): int {.
     importc: "dladdr", header: "<dlfcn.h>".}
 
-  when not hasThreadSupport:
-    var
-      tempAddresses: array[0..127, pointer] # should not be alloc'd on stack
-      tempDlInfo: TDl_info
+  when supportedOs and not defined(gccStacktrace):
+    proc backtrace(symbols: ptr pointer, size: int): int {.
+      importc: "backtrace", header: "<execinfo.h>".}
 
-  proc auxWriteStackTraceWithBacktrace(s: var string) =
-    when hasThreadSupport:
+    when not hasThreadSupport:
       var
-        tempAddresses: array[0..127, pointer] # but better than a threadvar
+        tempAddresses: array[0..127, pointer] # should not be alloc'd on stack
         tempDlInfo: TDl_info
-    # This is allowed to be expensive since it only happens during crashes
-    # (but this way you don't need manual stack tracing)
-    var size = backtrace(cast[ptr pointer](addr(tempAddresses)),
-                         len(tempAddresses))
-    var enabled = false
-    for i in 0..size-1:
-      var dlresult = dladdr(tempAddresses[i], addr(tempDlInfo))
-      if enabled:
-        if dlresult != 0:
-          var oldLen = s.len
-          add(s, tempDlInfo.dli_fname)
-          if tempDlInfo.dli_sname != nil:
-            for k in 1..max(1, 25-(s.len-oldLen)): add(s, ' ')
-            add(s, tempDlInfo.dli_sname)
+
+    proc auxWriteStackTraceWithBacktrace(s: var string) =
+      when hasThreadSupport:
+        var
+          tempAddresses: array[0..127, pointer] # but better than a threadvar
+          tempDlInfo: TDl_info
+      # This is allowed to be expensive since it only happens during crashes
+      # (but this way you don't need manual stack tracing)
+      var size = backtrace(cast[ptr pointer](addr(tempAddresses)),
+                           len(tempAddresses))
+      var enabled = false
+      for i in 0..size-1:
+        var dlresult = dladdr(tempAddresses[i], addr(tempDlInfo))
+        if enabled:
+          if dlresult != 0:
+            var oldLen = s.len
+            add(s, tempDlInfo.dli_fname)
+            if tempDlInfo.dli_sname != nil:
+              for k in 1..max(1, 25-(s.len-oldLen)): add(s, ' ')
+              add(s, tempDlInfo.dli_sname)
+          else:
+            add(s, '?')
+          add(s, "\n")
         else:
-          add(s, '?')
-        add(s, "\n")
+          if dlresult != 0 and tempDlInfo.dli_sname != nil and
+              c_strcmp(tempDlInfo.dli_sname, "signalHandler") == 0'i32:
+            # Once we're past signalHandler, we're at what the user is
+            # interested in
+            enabled = true
+  else:
+    type
+      UnwindContext {.bycopy.} = object
+      BtContext = object
+        s: ptr string
+        enabled: bool
+
+    proc unwindBacktrace[T](fn: proc(ctx: var UnwindContext; arg: ptr T) {.cdecl.};
+                            arg: ptr T): cint {.cdecl, importc: "_Unwind_Backtrace".}
+    proc unwindGetIp(ctx: var UnwindContext): pointer {.cdecl, importc: "_Unwind_GetIP".}
+
+    when not hasThreadSupport:
+      var tempDlInfo: TDlInfo
+
+    proc fillBt(ctx: var UnwindContext; b: ptr BtContext) {.cdecl.} =
+      when hasThreadSupport:
+        var tempDlInfo: TDl_info
+
+      let dlresult = dladdr(unwindGetIp ctx, addr tempDlInfo)
+      if b.enabled:
+        if dlresult != 0:
+          var oldLen = b.s[].len
+          b.s[].add tempDlInfo.dli_fname
+          if tempDlInfo.dli_sname != nil:
+            for k in 1..max(1, 25-(b.s[].len-oldLen)): b.s[].add ' '
+            b.s[].add tempDlInfo.dli_sname
+        else:
+          b.s[].add '?'
+        b.s[].add "\n"
       else:
         if dlresult != 0 and tempDlInfo.dli_sname != nil and
             c_strcmp(tempDlInfo.dli_sname, "signalHandler") == 0'i32:
           # Once we're past signalHandler, we're at what the user is
           # interested in
-          enabled = true
+          b.enabled = true
+
+    proc auxWriteStackTraceWithBacktrace(s: var string) =
+      var bctx = BtContext(s: addr s, enabled: false)
+      discard unwindBacktrace(fillBt, addr bctx)
 
 when not hasThreadSupport:
   var
