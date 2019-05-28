@@ -10,5 +10,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: nproc
-  displayName: 'Run a one-line script'
+- script: git clone --depth 1 https://github.com/nim-lang/csources
+  displayName: 'Checkout csources'
+- script: make -C csources -j 3 LD=gcc
+  displayName: 'Build csources'
+- script: bin/nim c koch
+  displayName: 'Build koch'
+- bash: |
+    export PATH="$PWD/bin${PATH:+:${PATH}}"
+    ./koch runCI
+  displayName: 'Run CI'
