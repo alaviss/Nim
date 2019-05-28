@@ -19,7 +19,7 @@ steps:
   fetchDepth: 1
 - script: git clone --depth 1 https://github.com/nim-lang/csources
   displayName: 'Checkout csources'
-- script: make -C csources -j 3 LD=gcc
+- script: make -C csources -j 2 LD=gcc
   displayName: 'Build csources'
 - script: bin/nim c koch
   displayName: 'Build koch'
