@@ -15,8 +15,13 @@ steps:
     sudo apt-get install -yq libcurl4-openssl-dev libsdl1.2-dev \
       libgc-dev libsfml-dev
   displayName: 'Install test deps'
-- script: git clone --depth 1 https://github.com/nim-lang/csources
-  displayName: 'Checkout csources'
+- checkout: self
+  fetchDepth: 1
+- checkout: https://github.com/nim-lang/csources.git
+  fetchDepth: 1
+  path: csources
+#- script: git clone --depth 1 https://github.com/nim-lang/csources
+#  displayName: 'Checkout csources'
 - script: make -C csources -j 3 LD=gcc
   displayName: 'Build csources'
 - script: bin/nim c koch
