@@ -10,9 +10,10 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: >
-    sudo apt-get install libcurl4-openssl-dev libsdl1.2-dev
-    libgc-dev libsfml-dev
+- script: |
+    sudo apt-get update -qq
+    sudo apt-get install -yq libcurl4-openssl-dev libsdl1.2-dev \
+      libgc-dev libsfml-dev
   displayName: 'Install test deps'
 - script: git clone --depth 1 https://github.com/nim-lang/csources
   displayName: 'Checkout csources'
