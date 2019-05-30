@@ -17,6 +17,14 @@ steps:
   displayName: 'Install test deps'
 - checkout: self
   fetchDepth: 1
+- script: |
+    curl -u :$AZURE_PAT -F testCaseTitle="Test 1" -F outcome="Passed" -F errorMessage="" $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/Runs/$AZURE_BUILD_ID/results?api_version=5.0
+    curl -u :$AZURE_PAT -F testCaseTitle="Test 3" -F outcome="Failed" -F errorMessage="test msg" $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/Runs/$AZURE_BUILD_ID/results?api_version=5.0
+  env:
+    AZURE_PAT: $(System.AccessToken)
+    AZURE_ORG_URI: $(System.TeamFoundationCollectionUri)
+    AZURE_PROJ: $(System.TeamProject)
+    AZURE_BUILD_ID: $(System.DefinitionId)
 - script: git clone --depth 1 https://github.com/nim-lang/csources
   displayName: 'Checkout csources'
 - script: make -C csources -j 2 LD=gcc
