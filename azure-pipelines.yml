@@ -18,9 +18,11 @@ steps:
 - checkout: self
   fetchDepth: 1
 - script: |
+    set -ev
     runId=$(curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '{"automated": true, "build": {"id": "'$AZURE_BUILD_ID'"}, "name": "Test"}' $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/runs?api-version=5.0 | grep -m 1 "id" | cut -f 2 -d '=' | sed -i 's/,//')
     curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '{"testCaseTitle": "Test 1", "outcome": "Passed"}' $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/Runs/$runId/results?api-version=5.0
     curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '{"testCaseTitle": "Test 3", "outcome": "Failed", "errorMessage": "test msg"}' $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/Runs/$runId/results?api-version=5.0
+    curl -u :$AZURE_PAT -X PATCH -H 'Content-Type: application/json' -d '{"state": "Completed"}' $AZURE_ORG_URI/$AZURE_PROJ/_apis/test/runs/$runId?api-version=5.0
   env:
     AZURE_PAT: $(System.AccessToken)
     AZURE_ORG_URI: $(System.TeamFoundationCollectionUri)
