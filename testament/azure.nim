@@ -34,15 +34,17 @@ proc init*() =
   if not isAzure:
     return
   http = newHttpClient()
-  runId = invokeRest(HttpPost,
-                     ApiRuns,
-                     %* {
-                       "automated": true,
-                       "build": { "id": getEnv("BUILD_BUILDID") },
-                       "buildPlatform": hostCPU,
-                       "controller": "nim-testament",
-                       "name": hostOS & " " & hostCPU
-                     }).body.parseJson["id"].getInt(-1)
+  let resp = invokeRest(HttpPost,
+                        ApiRuns,
+                        %* {
+                          "automated": true,
+                          "build": { "id": getEnv("BUILD_BUILDID") },
+                          "buildPlatform": hostCPU,
+                          "controller": "nim-testament",
+                          "name": hostOS & " " & hostCPU
+                        })
+  echo resp.body
+  runId = resp.body.parseJson["id"].getInt(-1)
 
 proc deinit*() =
   if not isAzure:
