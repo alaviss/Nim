@@ -40,6 +40,8 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
 template inFold*(desc, body) =
   if existsEnv("TRAVIS"):
     echo "travis_fold:start:" & desc.replace(" ", "_")
+  elif existsEnv("TF_BUILD"):
+    echo "##vso[task.setprogress]" & desc
 
   body
 
