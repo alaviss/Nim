@@ -6,10 +6,10 @@
 #    Look at license.txt for more info.
 #    All rights reserved.
 
-import base64, json, httpclient, os
+import base64, json, httpclient, os, strutils
 
 const
-  ApiRuns = "/_apis/runs"
+  ApiRuns = "/_apis/test/runs"
   ApiVersion = "?api-version=5.0"
 
 var
@@ -21,34 +21,39 @@ template apiResults: untyped =
 
 let isAzure* = existsEnv("TF_BUILD")
 
+proc getAzureEnv(env: string): string {.inline.} =
+  # Conversion rule at:
+  # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables#set-variables-in-pipeline
+  env.toUpperAscii().replace('.', '_').getEnv
+
 proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
-  echo "Request URL: ", getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") &
-                        getEnv("SYSTEM_TEAMPROJECTID") & api & ApiVersion
-  http.request getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") &
-               getEnv("SYSTEM_TEAMPROJECTID") & api & ApiVersion,
-               httpMethod,
-               $body,
-               newHttpHeaders {
-                 "Accept": "application/json",
-                 "Authorization": "Basic " & getEnv("SYSTEM_ACCESSTOKEN").encode(newLine = ""),
-                 "Content-Type": "application/json"
-               }
+  echo "Request URL: ", getAzureEnv("System.TeamFoundationCollectionUri") &
+                        getAzureEnv("System.TeamProjectId") & api & ApiVersion
+  result = http.request(getAzureEnv("System.TeamFoundationCollectionUri") &
+                        getAzureEnv("System.TeamProjectId") & api & ApiVersion,
+                        httpMethod,
+                        $body,
+                        newHttpHeaders {
+                          "Accept": "application/json",
+                          "Authorization": "Basic " & getAzureEnv("System.AccessToken").encode(newLine = ""),
+                          "Content-Type": "application/json"
+                        })
+  if result.code != Http200:
+    raise newException(HttpRequestError, "Server returned: " & result.body)
 
 proc init*() =
   if not isAzure:
     return
   http = newHttpClient()
-  let resp = invokeRest(HttpPost,
-                        ApiRuns,
-                        %* {
-                          "automated": true,
-                          "build": { "id": getEnv("BUILD_BUILDID") },
-                          "buildPlatform": hostCPU,
-                          "controller": "nim-testament",
-                          "name": hostOS & " " & hostCPU
-                        })
-  echo resp.body
-  runId = resp.body.parseJson["id"].getInt(-1)
+  runId = invokeRest(HttpPost,
+                     ApiRuns,
+                     %* {
+                       "automated": true,
+                       "build": { "id": getAzureEnv("Build.BuildId") },
+                       "buildPlatform": hostCPU,
+                       "controller": "nim-testament",
+                       "name": hostOS & " " & hostCPU
+                     }).body.parseJson["id"].getInt(-1)
 
 proc deinit*() =
   if not isAzure:
