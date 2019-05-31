@@ -649,7 +649,7 @@ proc main() =
     if skipFrom.len > 0:
       myself &= " " & quoteShell("--skipFrom:" & skipFrom)
     if isAzure:
-      myself &= " " & quoteShell("--azureRunId:" & $azure.runId())
+      myself &= " " & quoteShell("--azureRunId:" & $azure.getRunId())
 
     var cats: seq[string]
     let rest = if p.cmdLineRest.string.len > 0: " " & p.cmdLineRest.string else: ""

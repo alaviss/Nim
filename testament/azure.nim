@@ -78,4 +78,4 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
                        "testCaseTitle": name
                      }])
 
-proc runId*(): int = runId
+proc getRunId*(): int = runId
