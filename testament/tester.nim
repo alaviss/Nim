@@ -12,7 +12,7 @@
 import
   parseutils, strutils, pegs, os, osproc, streams, parsecfg, json,
   marshal, backend, parseopt, specs, htmlgen, browsers, terminal,
-  algorithm, times, sets, md5, sequtils
+  algorithm, times, sets, md5, sequtils, azure
 
 include compiler/nodejs
 
@@ -273,7 +273,7 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
       maybeStyledEcho styleBright, given, "\n"
 
 
-  if backendLogging and existsEnv("APPVEYOR"):
+  if backendLogging and (existsEnv("APPVEYOR") or isAzure):
     let (outcome, msg) =
       case success
       of reSuccess:
@@ -284,14 +284,19 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
         ("Failed", "Failure: " & $success & "\n" & given)
       else:
         ("Failed", "Failure: " & $success & "\nExpected:\n" & expected & "\n\n" & "Gotten:\n" & given)
-    var p = startProcess("appveyor", args=["AddTest", test.name.replace("\\", "/") & test.options,
-                         "-Framework", "nim-testament", "-FileName",
-                         test.cat.string,
-                         "-Outcome", outcome, "-ErrorMessage", msg,
-                         "-Duration", $(duration*1000).int],
-                         options={poStdErrToStdOut, poUsePath, poParentStreams})
-    discard waitForExit(p)
-    close(p)
+    if existsEnv "APPVEYOR":
+      var p = startProcess("appveyor", args=["AddTest", test.name.replace("\\", "/") & test.options,
+                           "-Framework", "nim-testament", "-FileName",
+                           test.cat.string,
+                           "-Outcome", outcome, "-ErrorMessage", msg,
+                           "-Duration", $(duration*1000).int],
+                           options={poStdErrToStdOut, poUsePath, poParentStreams})
+      discard waitForExit(p)
+      close(p)
+    else:
+      azure.addTestResult(test.name.replace("\\", "/") & test.options,
+                          test.cat.string,
+                          int(duration * 1000), msg, outcome)
 
 proc cmpMsgs(r: var TResults, expected, given: TSpec, test: TTest, target: TTarget) =
   if strip(expected.msg) notin strip(given.msg):
@@ -570,6 +575,7 @@ proc main() =
   os.putenv "NIMTEST_OUTPUT_LVL", "PRINT_FAILURES"
 
   backend.open()
+  azure.init()
   var optPrintResults = false
   var optFailing = false
   var targetsStr = ""
@@ -695,6 +701,7 @@ proc main() =
     if action == "html": openDefaultBrowser(resultsFile)
     else: echo r, r.data
   backend.close()
+  azure.deinit()
   var failed = r.total - r.passed - r.skipped
   if failed != 0:
     echo "FAILURE! total: ", r.total, " passed: ", r.passed, " skipped: ",

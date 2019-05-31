@@ -17,16 +17,6 @@ steps:
   displayName: 'Install test deps'
 - checkout: self
   fetchDepth: 1
-- bash: |
-    set -e
-    runId=$(curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '{"automated": true, "build": {"id": "'$AZURE_BUILD_ID'"}, "name": "Test"}' $AZURE_RUN_API_URI?api-version=5.0 | jq .id)
-    curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '[{"testCaseTitle": "Test 1", "automatedTestName": "test1", "outcome": "Passed"}]' $AZURE_RUN_API_URI/$runId/results?api-version=5.0
-    curl -u :$AZURE_PAT -H 'Content-Type: application/json' -d '[{"testCaseTitle": "Test 3", "automatedTestName": "test2", "outcome": "Failed", "errorMessage": "test msg"}]' $AZURE_RUN_API_URI/$runId/results?api-version=5.0
-    curl -u :$AZURE_PAT -X PATCH -H 'Content-Type: application/json' -d '{"state": "Completed"}' $AZURE_RUN_API_URI/$runId?api-version=5.0
-  env:
-    AZURE_PAT: $(System.AccessToken)
-    AZURE_RUN_API_URI: $(System.TeamFoundationCollectionUri)/$(System.TeamProject)/_apis/test/runs
-    AZURE_BUILD_ID: $(Build.BuildId)
 - script: git clone --depth 1 https://github.com/nim-lang/csources
   displayName: 'Checkout csources'
 - bash: make -C csources -j $(nproc) LD=gcc
@@ -37,3 +27,5 @@ steps:
     export PATH="$PWD/bin${PATH:+:${PATH}}"
     ./koch runCI
   displayName: 'Run CI'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
