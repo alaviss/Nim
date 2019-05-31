@@ -10,16 +10,20 @@ import base64, json, httpclient, os
 
 const
   ApiRuns = "/_apis/runs"
-  ApiResults = ApiRuns & "/results"
   ApiVersion = "?api-version=5.0"
 
 var
   http: HttpClient
   runId = -1
 
+template apiResults =
+  ApiRuns & "/" & $runId & "/results"
+
 let isAzure* = existsEnv("TF_BUILD")
 
 proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
+  echo "Request URL: ", getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") & "/" &
+                        getEnv("SYSTEM_TEAMPROJECT") & api & ApiVersion
   http.request getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") & "/" &
                getEnv("SYSTEM_TEAMPROJECT") & api & ApiVersion,
                httpMethod,
@@ -59,7 +63,7 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
   if not isAzure:
     return
   discard invokeRest(HttpPost,
-                     ApiResults & "/" & $runId,
+                     apiResults,
                      %* [{
                        "automatedTestName": filename,
                        "durationInMs": durationInMs,
