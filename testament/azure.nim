@@ -53,6 +53,7 @@ proc init*(rid = -1) =
                          "controller": "nim-testament",
                          "name": hostOS & " " & hostCPU
                        }).body.parseJson["id"].getInt(-1)
+    echo "got run id: ", runId
   else:
     runId = rid
 
