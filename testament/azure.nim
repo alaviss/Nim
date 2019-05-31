@@ -16,16 +16,16 @@ var
   http: HttpClient
   runId = -1
 
-template apiResults =
+template apiResults: untyped =
   ApiRuns & "/" & $runId & "/results"
 
 let isAzure* = existsEnv("TF_BUILD")
 
 proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
-  echo "Request URL: ", getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") & "/" &
-                        getEnv("SYSTEM_TEAMPROJECT") & api & ApiVersion
-  http.request getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") & "/" &
-               getEnv("SYSTEM_TEAMPROJECT") & api & ApiVersion,
+  echo "Request URL: ", getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") &
+                        getEnv("SYSTEM_TEAMPROJECTID") & api & ApiVersion
+  http.request getEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") &
+               getEnv("SYSTEM_TEAMPROJECTID") & api & ApiVersion,
                httpMethod,
                $body,
                newHttpHeaders {
