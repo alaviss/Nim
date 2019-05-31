@@ -53,7 +53,6 @@ proc init*(rid = -1) =
                          "controller": "nim-testament",
                          "name": hostOS & " " & hostCPU
                        }).body.parseJson["id"].getInt(-1)
-    echo "got run id: ", runId
   else:
     runId = rid
 
@@ -69,18 +68,15 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
                     outcome: string) =
   if not isAzure:
     return
-  let send = %* [{
-                  "automatedTestName": name,
-                  "automatedTestStorage": filename,
-                  "durationInMs": durationInMs,
-                  "errorMessage": errorMsg,
-                  "outcome": outcome,
-                  "testCaseTitle": name
-                }]
-  echo send
-  let resp = invokeRest(HttpPost,
-                        apiResults,
-                        send)
-  echo resp.body.parseJson
+  discard invokeRest(HttpPost,
+                     apiResults,
+                     %* [{
+                          "automatedTestName": name,
+                          "automatedTestStorage": filename,
+                          "durationInMs": durationInMs,
+                          "errorMessage": errorMsg,
+                          "outcome": outcome,
+                          "testCaseTitle": name
+                        }])
 
 proc getRunId*(): int = runId
