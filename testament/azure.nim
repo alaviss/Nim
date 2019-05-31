@@ -62,7 +62,7 @@ proc deinit*() =
 
   discard invokeRest(HttpPatch,
                      ApiRuns & "/" & $runId,
-                     %* { "status": "Completed" })
+                     %* { "state": "Completed" })
 
 proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
                     outcome: string) =
