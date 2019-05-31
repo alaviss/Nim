@@ -29,13 +29,14 @@ proc getAzureEnv(env: string): string {.inline.} =
 proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
   echo "Request URL: ", getAzureEnv("System.TeamFoundationCollectionUri") &
                         getAzureEnv("System.TeamProjectId") & api & ApiVersion
+  echo "Token exists: ", getAzureEnv("System.AccessToken").len > 0
   result = http.request(getAzureEnv("System.TeamFoundationCollectionUri") &
                         getAzureEnv("System.TeamProjectId") & api & ApiVersion,
                         httpMethod,
                         $body,
                         newHttpHeaders {
                           "Accept": "application/json",
-                          "Authorization": "Basic " & getAzureEnv("System.AccessToken").encode(newLine = ""),
+                          "Authorization": "Basic " & encode(':' & getAzureEnv("System.AccessToken"), newLine = ""),
                           "Content-Type": "application/json"
                         })
   if result.code != Http200:
