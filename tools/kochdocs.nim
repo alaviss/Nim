@@ -38,7 +38,7 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
     let failureMsg = if not existsEnv("TF_BUILD"):
                        "FAILURE"
                      else:
-                       "##vso[task.complete result=Failed]" & cmd
+                       "##vso[task.complete result=SucceededWithIssues]" & cmd
     quit(failureMsg, errorcode)
   putEnv("PATH", prevPath)
 
