@@ -27,9 +27,6 @@ proc getAzureEnv(env: string): string {.inline.} =
   env.toUpperAscii().replace('.', '_').getEnv
 
 proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
-  echo "Request URL: ", getAzureEnv("System.TeamFoundationCollectionUri") &
-                        getAzureEnv("System.TeamProjectId") & api & ApiVersion
-  echo "Token exists: ", getAzureEnv("System.AccessToken").len > 0
   result = http.request(getAzureEnv("System.TeamFoundationCollectionUri") &
                         getAzureEnv("System.TeamProjectId") & api & ApiVersion,
                         httpMethod,
@@ -42,19 +39,22 @@ proc invokeRest(httpMethod: HttpMethod; api: string; body: JsonNode): Response =
   if result.code != Http200:
     raise newException(HttpRequestError, "Server returned: " & result.body)
 
-proc init*() =
+proc init*(rid = -1) =
   if not isAzure:
     return
   http = newHttpClient()
-  runId = invokeRest(HttpPost,
-                     ApiRuns,
-                     %* {
-                       "automated": true,
-                       "build": { "id": getAzureEnv("Build.BuildId") },
-                       "buildPlatform": hostCPU,
-                       "controller": "nim-testament",
-                       "name": hostOS & " " & hostCPU
-                     }).body.parseJson["id"].getInt(-1)
+  if rid < 0:
+    runId = invokeRest(HttpPost,
+                       ApiRuns,
+                       %* {
+                         "automated": true,
+                         "build": { "id": getAzureEnv("Build.BuildId") },
+                         "buildPlatform": hostCPU,
+                         "controller": "nim-testament",
+                         "name": hostOS & " " & hostCPU
+                       }).body.parseJson["id"].getInt(-1)
+  else:
+    runId = rid
 
 proc deinit*() =
   if not isAzure:
@@ -77,3 +77,5 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
                        "outcome": outcome,
                        "testCaseTitle": name
                      }])
+
+proc runId*(): int = runId

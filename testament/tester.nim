@@ -575,13 +575,13 @@ proc main() =
   os.putenv "NIMTEST_OUTPUT_LVL", "PRINT_FAILURES"
 
   backend.open()
-  azure.init()
   var optPrintResults = false
   var optFailing = false
   var targetsStr = ""
   var isMainProcess = true
   var skipFrom = ""
   var useMegatest = true
+  var azureRunId = -1
 
   var p = initOptParser()
   p.next()
@@ -625,6 +625,8 @@ proc main() =
         quit Usage
     of "skipfrom":
       skipFrom = p.val.string
+    of "azureRunId":
+      azureRunId = p.val.parseInt
     else:
       quit Usage
     p.next()
@@ -632,6 +634,7 @@ proc main() =
     quit Usage
   var action = p.key.string.normalize
   p.next()
+  azure.init(azureRunId)
   var r = initResults()
   case action
   of "all":
@@ -645,6 +648,8 @@ proc main() =
 
     if skipFrom.len > 0:
       myself &= " " & quoteShell("--skipFrom:" & skipFrom)
+    if isAzure:
+      myself &= " " & quoteShell("--azureRunId:" & $azure.runId())
 
     var cats: seq[string]
     let rest = if p.cmdLineRest.string.len > 0: " " & p.cmdLineRest.string else: ""
