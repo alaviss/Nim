@@ -34,7 +34,12 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
     echo("Adding to $PATH: ", absolute)
     putEnv("PATH", (if prevPath.len > 0: prevPath & PathSep else: "") & absolute)
   echo(cmd)
-  if execShellCmd(cmd) != 0: quit("FAILURE", errorcode)
+  if execShellCmd(cmd) != 0:
+    let failureMsg = if not existsEnv("TF_BUILD"):
+                       "FAILURE"
+                     else:
+                       "##vso[task.complete result=Failed]" & cmd
+    quit(failureMsg, errorcode)
   putEnv("PATH", prevPath)
 
 template inFold*(desc, body) =
