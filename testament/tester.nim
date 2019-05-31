@@ -295,7 +295,7 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
       close(p)
     else:
       azure.addTestResult(test.name.replace("\\", "/") & test.options,
-                          test.cat.string,
+                          test.name.replace("\\", "/"),
                           int(duration * 1000), msg, outcome)
 
 proc cmpMsgs(r: var TResults, expected, given: TSpec, test: TTest, target: TTarget) =
