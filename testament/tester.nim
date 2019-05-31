@@ -271,8 +271,6 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
       maybeStyledEcho styleBright, expected, "\n"
       maybeStyledEcho fgYellow, "Gotten:"
       maybeStyledEcho styleBright, given, "\n"
-    if isAzure:
-      echo "##vso[task.logissue type=error;sourcepath=", test.name, "]Test failed"
 
 
   if backendLogging and (existsEnv("APPVEYOR") or isAzure):

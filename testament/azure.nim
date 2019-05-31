@@ -68,14 +68,16 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
                     outcome: string) =
   if not isAzure:
     return
-  discard invokeRest(HttpPost,
-                     apiResults,
-                     %* [{
-                       "automatedTestName": filename,
-                       "durationInMs": durationInMs,
-                       "errorMessage": errorMsg,
-                       "outcome": outcome,
-                       "testCaseTitle": name
-                     }])
+  let send = %* [{
+                  "automatedTestName": filename,
+                  "durationInMs": durationInMs,
+                  "errorMessage": errorMsg,
+                  "outcome": outcome,
+                  "testCaseTitle": name
+                }]
+  let resp = invokeRest(HttpPost,
+                        apiResults,
+                        send)
+  echo resp.body.parseJson
 
 proc getRunId*(): int = runId
