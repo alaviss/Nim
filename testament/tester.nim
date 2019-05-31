@@ -625,7 +625,7 @@ proc main() =
         quit Usage
     of "skipfrom":
       skipFrom = p.val.string
-    of "azureRunId":
+    of "azurerunid":
       azureRunId = p.val.parseInt
     else:
       quit Usage
