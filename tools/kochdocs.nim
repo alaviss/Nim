@@ -38,13 +38,19 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
     let failureMsg = if not existsEnv("TF_BUILD"):
                        "FAILURE"
                      else:
-                       "##vso[task.complete result=SucceededWithIssues]" & cmd
+                       "##[error]FAILURE\p##vso[task.complete result=SucceededWithIssues]" & cmd
+    let errorcode = if not existsEnv("TF_BUILD"):
+                      errorcode
+                    else:
+                      0
     quit(failureMsg, errorcode)
   putEnv("PATH", prevPath)
 
 template inFold*(desc, body) =
   if existsEnv("TRAVIS"):
     echo "travis_fold:start:" & desc.replace(" ", "_")
+  elif existsEnv("TF_BUILD"):
+    echo "##[section]" & desc
 
   body
 
