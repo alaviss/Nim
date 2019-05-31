@@ -70,12 +70,14 @@ proc addTestResult*(name, filename: string; durationInMs: int; errorMsg: string;
   if not isAzure:
     return
   let send = %* [{
-                  "automatedTestName": filename,
+                  "automatedTestName": name,
+                  "automatedTestStorage": filename,
                   "durationInMs": durationInMs,
                   "errorMessage": errorMsg,
                   "outcome": outcome,
                   "testCaseTitle": name
                 }]
+  echo send
   let resp = invokeRest(HttpPost,
                         apiResults,
                         send)
