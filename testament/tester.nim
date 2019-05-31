@@ -281,7 +281,7 @@ proc addResult(r: var TResults, test: TTest, target: TTarget,
       of reSuccess:
         ("Passed", "")
       of reDisabled, reJoined:
-        (if not isAzure: "Skipped" else: "NotExecuted", "")
+        ((if not isAzure: "Skipped" else: "NotExecuted"), "")
       of reBuildFailed, reNimcCrash, reInstallFailed:
         ("Failed", "Failure: " & $success & "\n" & given)
       else:
