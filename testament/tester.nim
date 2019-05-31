@@ -708,7 +708,6 @@ proc main() =
     if action == "html": openDefaultBrowser(resultsFile)
     else: echo r, r.data
   backend.close()
-  azure.deinit()
   var failed = r.total - r.passed - r.skipped
   if failed != 0:
     echo "FAILURE! total: ", r.total, " passed: ", r.passed, " skipped: ",
@@ -716,6 +715,7 @@ proc main() =
     quit(QuitFailure)
   if isMainProcess:
     echo "Used ", compilerPrefix, " to run the tests. Use --nim to override."
+    azure.deinit()
 
 if paramCount() == 0:
   quit Usage
