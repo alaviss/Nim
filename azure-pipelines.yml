@@ -7,10 +7,10 @@ strategy:
       vmImage: 'ubuntu-16.04'
       CPU: i386
     OSX_amd64:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.13'
       CPU: amd64
     OSX_amd64_cpp:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.13'
       CPU: amd64
       NIM_COMPILE_TO_CPP: true
     Windows_amd64:
@@ -141,8 +141,7 @@ steps:
     displayName: 'Build koch'
 
     # set result to omit the "bash exited with error code '1'" message
-  - bash: |
-      ./koch runCI || echo '##vso[task.complete result=Failed]'
+  - bash: ./koch runCI || echo '##vso[task.complete result=Failed]'
     displayName: 'Run CI'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
