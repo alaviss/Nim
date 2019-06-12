@@ -28,15 +28,18 @@ matrix:
             - libsdl1.2-dev:i386
             - libsfml-dev:i386
 
-    - os: osx
-      env:
-        - NIM_COMPILE_TO_CPP=false
-        - CPU=amd64
+    - os: windows
+      env: CPU=amd64
 
-    - os: osx
-      env:
-        - NIM_COMPILE_TO_CPP=true
-        - CPU=amd64
+              #    - os: osx
+              #      env:
+              #        - NIM_COMPILE_TO_CPP=false
+              #        - CPU=amd64
+              #
+              #    - os: osx
+              #      env:
+              #        - NIM_COMPILE_TO_CPP=true
+              #        - CPU=amd64
 
 # To allow failures for a failing configuration, use something like:
 #  allow_failures:
