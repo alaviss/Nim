@@ -65,6 +65,7 @@ install:
   - if [[ $CPU = i386 ]]; then chmod 755 bin/gcc; fi
   - if [[ $CPU = i386 ]]; then echo -e "#!/bin/bash\n$(which g++) -m32 \"\$@\"" > bin/g++; fi
   - if [[ $CPU = i386 ]]; then chmod 755 bin/g++; fi
+  - if [[ $TRAVIS_OS_NAME = windows ]]; then choco install -y make; fi
 
 before_script:
   - git clone --depth 1 https://github.com/nim-lang/csources.git
