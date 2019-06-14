@@ -68,13 +68,12 @@ install:
   - |
     if [[ $TRAVIS_OS_NAME = windows ]]; then
       choco install -y make
-      cd dist
-      curl -LO https://nim-lang.org/download/mingw64-6.3.0.7z
-      curl -LO https://nim-lang.org/download/dlls.zip
-      7z x mingw64-6.3.0.7z
-      7z x dlls.zip -o../bin
-      export PATH="$PWD/mingw64/bin${PATH:+:$PATH}"
-      cd ..
+      mkdir dist
+      curl -L https://nim-lang.org/download/mingw64-6.3.0.7z -o dist/mingw64.7z
+      curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
+      7z x dist/mingw64-6.3.0.7z -odist
+      7z x dist/dlls.zip -obin
+      export PATH="$PWD/dist/mingw64/bin${PATH:+:$PATH}"
     fi
 
 before_script:
