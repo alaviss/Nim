@@ -134,3 +134,7 @@ steps:
 
   - bash: ./koch tests r tests/float/tfloatrange.nim
     displayName: 'Build & run tfloatrange with testament'
+
+  - bash: testament/tester r tests/float/tfloatrange.nim
+    displayName: 'Run via testament directly'
+    condition: failed()
