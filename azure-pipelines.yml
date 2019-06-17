@@ -1,25 +1,8 @@
 strategy:
   matrix:
-    Linux_amd64:
-      vmImage: 'ubuntu-16.04'
-      CPU: amd64
-    Linux_i386:
-      vmImage: 'ubuntu-16.04'
-      CPU: i386
-    OSX_amd64:
-      vmImage: 'macOS-10.13'
-      CPU: amd64
-    OSX_amd64_cpp:
-      vmImage: 'macOS-10.13'
-      CPU: amd64
-      NIM_COMPILE_TO_CPP: true
     Windows_amd64:
       vmImage: 'vs2017-win2016'
       CPU: amd64
-    Windows_amd64_pkg:
-      vmImage: 'vs2017-win2016'
-      CPU: amd64
-      NIM_TEST_PACKAGES: true
 
 pool:
   vmImage: $(vmImage)
@@ -140,8 +123,8 @@ steps:
   - bash: nim c koch
     displayName: 'Build koch'
 
-    # set result to omit the "bash exited with error code '1'" message
-  - bash: ./koch runCI || echo '##vso[task.complete result=Failed]'
-    displayName: 'Run CI'
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - bash: ./koch boot -d:release
+    displayName: 'Build the compiler'
+
+  - bash: nim c --rangechecks:on -r tests/float/tfloatrange.nim
+    displayName: 'Build & run tfloatrange'
