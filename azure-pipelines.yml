@@ -128,3 +128,6 @@ steps:
 
   - bash: nim c --rangechecks:on -r tests/float/tfloatrange.nim
     displayName: 'Build & run tfloatrange'
+
+  - bash: ./koch tests r tests/float/tfloatrange.nim
+    displayName: 'Build & run tfloatrange with testament'
