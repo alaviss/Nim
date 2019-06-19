@@ -3,6 +3,9 @@ windows_container:
   os_version: 2019
 
 task:
+  investigate_script:
+    - dir %PROGRAMFILES%\Git
+    - dir %PROGRAMFILES%\Git\bin
   deps_script:
     - choco install -y nodejs-lts 7zip.portable make
     - mkdir dist
