@@ -138,3 +138,7 @@ steps:
   - bash: testament/tester r tests/float/tfloatrange.nim
     displayName: 'Run via testament directly'
     condition: failed()
+
+  - bash: NIM_COMPILE_TO_CPP=true testament/tester r tests/float/tfloatrange.nim
+    displayName: 'Run with C++ backend'
+    condition: always()
