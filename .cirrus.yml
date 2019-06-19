@@ -15,7 +15,7 @@ task:
   csources_script:
     - git clone --depth 1 https://github.com/nim-lang/csources
     - |
-      "%PROGRAMFILES%\Git\git-bash.exe" -c "make -j%NUMBER_OF_PROCESSORS% -C csources CC=gcc"
+      "%PROGRAMFILES%\Git\bin\bash.exe" -c "make -j%NUMBER_OF_PROCESSORS% -C csources CC=gcc"
   ci_script:
-    - bin\nim c koch
+    - bin\nim.exe c koch
     - koch runCI
