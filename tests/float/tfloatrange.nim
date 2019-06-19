@@ -26,7 +26,11 @@ let x = 9.0.StrictPositive
 myoverload(x)
 myoverload(9.0)
 
-doAssert(sqrt(x) == 3.0)
+try:
+  if not (sqrt(x) == 3.0):
+    raise newException(Exception, "sqrt(x) != 3.0 (" & $sqrt(x) & ")")
+except:
+  echo getCurrentExceptionMsg()
 
 var z = -10.0
 try:
@@ -39,7 +43,11 @@ proc strictOnlyProc(x: StrictPositive): bool =
   if x > 1.0: true else: false
   
 let x2 = 5.0.Positive
-doAssert(strictOnlyProc(x2))
+try:
+  if not strictOnlyProc(x2):
+    raise newException(Exception, "strictOnlyProc(x2)")
+except:
+  echo getCurrentExceptionMsg()
 
 try:
   let x4 = 0.0.Positive
