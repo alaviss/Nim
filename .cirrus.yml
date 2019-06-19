@@ -5,8 +5,9 @@ windows_container:
 task:
   investigate_script:
     - where git
-    - dir %PROGRAMFILES%\Git
-    - dir %PROGRAMFILES%\Git\bin
+    - dir "%PROGRAMFILES%\Git"
+    - dir "%PROGRAMFILES%\Git\bin"
+    - dir "%PROGRAMFILES%\Git\cmd"
   deps_script:
     - choco install -y nodejs-lts 7zip.portable make
     - mkdir dist
