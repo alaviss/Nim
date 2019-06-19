@@ -3,11 +3,6 @@ windows_container:
   os_version: 2019
 
 task:
-  investigate_script:
-    - where git
-    - dir "%PROGRAMFILES%\Git"
-    - dir "%PROGRAMFILES%\Git\bin"
-    - dir "%PROGRAMFILES%\Git\cmd"
   deps_script:
     - choco install -y nodejs-lts 7zip.portable make
     - mkdir dist
@@ -19,7 +14,7 @@ task:
     PATH: ${CIRRUS_WORKING_DIR}\bin;${CIRRUS_WORKING_DIR}\dist\mingw64\bin;$PATH
   csources_script:
     - git clone --depth 1 https://github.com/nim-lang/csources
-    - git bash -c "make -j%NUMBER_OF_PROCESSORS% -C csources CC=gcc"
+    - "%PROGRAMFILES%\Git\git-bash.exe" -c "make -j%NUMBER_OF_PROCESSORS% -C csources CC=gcc"
   ci_script:
     - bin\nim c koch
     - koch runCI
