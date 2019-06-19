@@ -4,6 +4,7 @@ windows_container:
 
 task:
   investigate_script:
+    - where git
     - dir %PROGRAMFILES%\Git
     - dir %PROGRAMFILES%\Git\bin
   deps_script:
