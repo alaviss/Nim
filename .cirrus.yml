@@ -1,0 +1,20 @@
+windows_container:
+  image: cirrusci/windowsservercore:2019
+  os_version: 2019
+
+task:
+  deps_script:
+    - choco install -y nodejs-lts 7zip.portable make git
+    - mkdir dist
+    - ps: wget https://nim-lang.org/download/dlls.zip -OutFile dist\dlls.zip
+    - ps: wget https://nim-lang.org/download/mingw64-6.3.0.7z -OutFile dist\mingw64.7z
+    - 7z x -y dist\dlls.zip -obin
+    - 7z x -y dist\mingw64.7z -odist
+  env:
+    PATH: ${CIRRUS_WORKING_DIR}\bin;${CIRRUS_WORKING_DIR}\dist\mingw64\bin;$PATH
+  csources_script:
+    - git clone --depth 1 https://github.com/nim-lang/csources
+    - make -j%NUMBER_OF_PROCESSORS% -C csources CC=gcc
+  ci_script:
+    - bin\nim c koch
+    - koch runCI
