@@ -11,7 +11,7 @@ task:
     - 7z x -y dist\dlls.zip -obin
     - 7z x -y dist\mingw64.7z -odist
   env:
-    PATH: ${CIRRUS_WORKING_DIR}\bin;${CIRRUS_WORKING_DIR}\dist\mingw64\bin;$PATH
+    PATH: %CD%\bin;%CD%\dist\mingw64\bin;%PATH%
   csources_script:
     - git clone --depth 1 https://github.com/nim-lang/csources
     - echo "%PATH%"
