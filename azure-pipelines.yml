@@ -140,11 +140,9 @@ steps:
   - bash: nim c koch
     displayName: 'Build koch'
 
-  - bash: echo $(System.AccessToken)
-    displayName: 'Access token'
-
     # set result to omit the "bash exited with error code '1'" message
   - bash: |
+      echo $SYSTEM_ACCESSTOKEN
       ./koch runCI || echo '##vso[task.complete result=Failed]'
     displayName: 'Run CI'
     env:
