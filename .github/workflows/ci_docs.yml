@@ -126,6 +126,6 @@ jobs:
           matrix.target == 'linux'
         uses: crazy-max/ghaction-github-pages@v1
         with:
-          build-dir: doc/html
+          build_dir: doc/html
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
