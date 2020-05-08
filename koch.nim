@@ -569,11 +569,12 @@ proc runCI(cmd: string) =
         "Generate coverage data",
         quoteShellCommand(
           ["lcov", "-c", "-b", ".", "-d", "nimcache",
-           "--exclude", "*generated_not_to_break_here",
            "--rc", "lcov_branch_coverage=1",
            "--no-external", "--no-compat-libtool",
            "-o", "nim.info"]
-         )
+        ) & " && " & quoteShellCommand(
+          ["lcov", "-o", "nim.info", "-r", "nim.info", "*generated_not_to_break_here"]
+        )
       )
 
 proc pushCsources() =
