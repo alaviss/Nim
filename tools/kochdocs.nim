@@ -77,7 +77,7 @@ proc nimexec*(cmd: string) =
   exec findNim().quoteShell() & " " & cmd
 
 proc getNimcache(input, args: string): string {.inline.} =
-  input & "_" & getMD5(args)
+  "nimcache" / input & "_" & getMD5(args)
 
 proc nimCompile*(input: string, outputDir = "bin", mode = "c", options = "") =
   let
