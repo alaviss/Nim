@@ -76,7 +76,7 @@ proc nimexec*(cmd: string) =
   # Consider using `nimCompile` instead
   exec findNim().quoteShell() & " " & cmd
 
-func getNimcache(input, args: string): string {.inline.} =
+proc getNimcache(input, args: string): string {.inline.} =
   input & "_" & getMD5(args)
 
 proc nimCompile*(input: string, outputDir = "bin", mode = "c", options = "") =
