@@ -565,6 +565,7 @@ proc runCI(cmd: string) =
       execFold("Run nimsuggest tests", "nim c $1 -r nimsuggest/tester" % coverage)
 
     if coverage.len > 0:
+      buildDocs(coverage)
       execFold(
         "Generate coverage data",
         quoteShellCommand(
