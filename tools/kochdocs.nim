@@ -32,7 +32,7 @@ proc findNimImpl*(): tuple[path: string, ok: bool] =
 
 proc findNim*(): string = findNimImpl().path
 
-proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
+proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "", allowFailure = false) =
   let prevPath = getEnv("PATH")
   if additionalPath.len > 0:
     var absolute = additionalPath
@@ -41,7 +41,7 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
     echo("Adding to $PATH: ", absolute)
     putEnv("PATH", (if prevPath.len > 0: prevPath & PathSep else: "") & absolute)
   echo(cmd)
-  if execShellCmd(cmd) != 0: quit("FAILURE", errorcode)
+  if execShellCmd(cmd) != 0 and not allowFailure: quit("FAILURE", errorcode)
   putEnv("PATH", prevPath)
 
 template inFold*(desc, body) =
@@ -53,11 +53,11 @@ template inFold*(desc, body) =
   if existsEnv("TRAVIS"):
     echo "travis_fold:end:" & desc.replace(" ", "_")
 
-proc execFold*(desc, cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
+proc execFold*(desc, cmd: string, errorcode: int = QuitFailure, additionalPath = "", allowFailure = false) =
   ## Execute shell command. Add log folding on Travis CI.
   # https://github.com/travis-ci/travis-ci/issues/2285#issuecomment-42724719
   inFold(desc):
-    exec(cmd, errorcode, additionalPath)
+    exec(cmd, errorcode, additionalPath, allowFailure)
 
 proc execCleanPath*(cmd: string,
                    additionalPath = ""; errorcode: int = QuitFailure) =

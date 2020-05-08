@@ -575,7 +575,6 @@ proc runCI(cmd: string) =
           infoname = dirname & ".info"
         execFold(
           "Generate coverage data for " & dir,
-          "{ " &
           quoteShellCommand(
             ["lcov", "-c", "-b", ".", "-d", dir,
              "--rc", "lcov_branch_coverage=1",
@@ -583,8 +582,8 @@ proc runCI(cmd: string) =
              "-t", dirname, "-o", infoname]
           ) & " && " & quoteShellCommand(
             ["lcov", "-o", infoname, "-r", infoname, "*generated_not_to_break_here"]
-          ) &
-          " } || true" # allow failures
+          ),
+          allowFailure = true
         )
         if infoname.fileExists:
           infofiles.add infoname
