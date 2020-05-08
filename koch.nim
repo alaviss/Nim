@@ -540,7 +540,7 @@ proc runCI(cmd: string) =
   elif getEnv("NIM_TEST_PACKAGES", "0") == "2":
     execFold("Test selected Nimble packages (2)", "nim c -r testament/testament cat nimble-packages-2")
   else:
-    buildTools()
+    buildTools(coverage)
 
     ## run tests
     execFold("Test nimscript", "nim e tests/test_nimscript.nims")
@@ -556,7 +556,7 @@ proc runCI(cmd: string) =
         const nimFFI = "./bin/nim.ctffi"
         # no need to bootstrap with koch boot (would be slower)
         let backend = if doUseCpp(): "cpp" else: "c"
-        execFold("build with -d:nimHasLibFFI", "nim $1 -d:release -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI])
+        execFold("build with -d:nimHasLibFFI", "nim $1 $3 -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI, if coverage.len > 0: coverage else: "-d:release"])
         execFold("test with -d:nimHasLibFFI", "$1 $2 -r testament/testament --nim:$1 r tests/trunner.nim" % [nimFFI, backend])
 
     execFold("Run nimdoc tests", "nim c $1 -r nimdoc/tester" % coverage)
