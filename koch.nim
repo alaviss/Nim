@@ -28,7 +28,7 @@ when defined(i386) and defined(windows) and defined(vcc):
   {.link: "icons/koch-i386-windows-vcc.res".}
 
 import
-  os, strutils, parseopt, osproc
+  os, strutils, parseopt, osproc, algorithm, sequtils
 
 import tools / kochdocs
 import tools / deps
@@ -524,13 +524,10 @@ proc runCI(cmd: string) =
   let coverage =
     if getEnv("NIM_TEST_COVERAGE", "0") == "1":
       # Disable stack trace and line trace to improve performance
-      "-d:coverage --stacktrace:off --linetrace:off"
+      "-d:coverage"
     else:
       ""
-  if coverage.len > 0:
-    kochExecFold("Boot in coverage mode", "boot " & coverage)
-  else:
-    kochExecFold("Boot in release mode", "boot -d:release")
+  kochExecFold("Boot in release mode", "boot -d:release " & coverage)
 
   ## build nimble early on to enable remainder to depend on it if needed
   kochExecFold("Build Nimble", "nimble")
@@ -549,33 +546,52 @@ proc runCI(cmd: string) =
       execFold("Compile tester", "nim c -d:nimCoroutines --os:genode -d:posix --compileOnly testament/testament")
 
     # main bottleneck here
-    execFold("Run tester", "nim c -r -d:nimCoroutines $1 testament/testament --pedantic all -d:nimCoroutines $2" % [coverage, if coverage.len > 0: "-d:coverage || true" else: ""])
+    execFold("Run tester", "nim c -r -d:nimCoroutines $1 testament/testament --pedantic all -d:nimCoroutines $2" % [coverage, if coverage.len > 0: coverage & " || true" else: ""])
     block CT_FFI:
       when defined(posix): # windows can be handled in future PR's
         execFold("nimble install -y libffi", "nimble install -y libffi")
         const nimFFI = "./bin/nim.ctffi"
         # no need to bootstrap with koch boot (would be slower)
         let backend = if doUseCpp(): "cpp" else: "c"
-        execFold("build with -d:nimHasLibFFI", "nim $1 $3 -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI, if coverage.len > 0: coverage else: "-d:release"])
-        execFold("test with -d:nimHasLibFFI", "$1 $2 $3 -r testament/testament --nim:$1 r tests/trunner.nim" % [nimFFI, backend, coverage])
+        execFold("build with -d:nimHasLibFFI", "nim $1 -d:release -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI])
+        execFold("test with -d:nimHasLibFFI", "$1 $2 -r testament/testament --nim:$1 r tests/trunner.nim" % [nimFFI, backend])
 
-    execFold("Run nimdoc tests", "nim c $1 -r nimdoc/tester" % coverage)
-    execFold("Run nimpretty tests", "nim c $1 -r nimpretty/tester.nim" % coverage)
+    execFold("Run nimdoc tests", "nim c -r nimdoc/tester")
+    execFold("Run nimpretty tests", "nim c -r nimpretty/tester.nim")
     when defined(posix):
-      execFold("Run nimsuggest tests", "nim c $1 -r nimsuggest/tester" % coverage)
+      execFold("Run nimsuggest tests", "nim c -r nimsuggest/tester")
 
     if coverage.len > 0:
       buildDocs(coverage)
-      execFold(
-        "Generate coverage data",
-        quoteShellCommand(
-          ["lcov", "-c", "-b", ".", "-d", "nimcache",
-           "--rc", "lcov_branch_coverage=1",
-           "--no-external", "--no-compat-libtool",
-           "-o", "nim.info"]
-        ) & " && " & quoteShellCommand(
-          ["lcov", "-o", "nim.info", "-r", "nim.info", "*generated_not_to_break_here"]
+      var subdirs: seq[string]
+      for kind, path in walkDir("nimcache"):
+        if kind == pcDir:
+          subdirs.add path
+
+      var infofiles: seq[string]
+      for dir in subdirs:
+        let
+          dirname = dir.lastPathPart
+          infoname = dirname & ".info"
+        execFold(
+          "Generate coverage data for " & dir,
+          "{ " &
+          quoteShellCommand(
+            ["lcov", "-c", "-b", ".", "-d", dir,
+             "--rc", "lcov_branch_coverage=1",
+             "--no-external", "--no-compat-libtool",
+             "-t", dirname, "-o", infoname]
+          ) & " && " & quoteShellCommand(
+            ["lcov", "-o", infoname, "-r", infoname, "*generated_not_to_break_here"]
+          ) &
+          " } || true" # allow failures
         )
+        if infoname.fileExists:
+          infofiles.add infoname
+
+      execFold(
+        "Combining generated coverage data",
+        quoteShellCommand @["lcov", "-o", "nim.info"] & concat(product([@["-a"], infofiles]))
       )
 
 proc pushCsources() =
