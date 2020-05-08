@@ -725,7 +725,6 @@ proc main() =
     # are covered by the 'megatest' category.
     isMainProcess = false
     var cat = Category(p.key)
-    p.next
     processCategory(r, cat, p.cmdLineRest.string, testsDir, runJoinableTests = false)
   of "p", "pat", "pattern":
     skips = loadSkipFrom(skipFrom)
