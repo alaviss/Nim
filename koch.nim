@@ -28,7 +28,7 @@ when defined(i386) and defined(windows) and defined(vcc):
   {.link: "icons/koch-i386-windows-vcc.res".}
 
 import
-  os, strutils, parseopt, osproc, algorithm, sequtils
+  os, strutils, parseopt, osproc
 
 import tools / kochdocs
 import tools / deps
@@ -563,34 +563,15 @@ proc runCI(cmd: string) =
 
     if coverage.len > 0:
       buildDocs(coverage)
-      var subdirs: seq[string]
-      for kind, path in walkDir("nimcache"):
-        if kind == pcDir:
-          subdirs.add path
-
-      var infofiles: seq[string]
-      for dir in subdirs:
-        let
-          dirname = dir.lastPathPart
-          infoname = dirname & ".info"
-        execFold(
-          "Generate coverage data for " & dir,
-          quoteShellCommand(
-            ["lcov", "-c", "-b", ".", "-d", dir,
-             "--rc", "lcov_branch_coverage=1",
-             "--no-external", "--no-compat-libtool",
-             "-t", dirname, "-o", infoname]
-          ) & " && " & quoteShellCommand(
-            ["lcov", "-o", infoname, "-r", infoname, "*generated_not_to_break_here"]
-          ),
-          allowFailure = true
-        )
-        if infoname.fileExists:
-          infofiles.add infoname
-
       execFold(
-        "Combining generated coverage data",
-        quoteShellCommand @["lcov", "-o", "nim.info"] & concat(product([@["-a"], infofiles]))
+        "Generate coverage data",
+        quoteShellCommand(
+          ["gcovr", "-j", "--root", ".",
+           "--object-directory", "nimcache",
+           "--exclude", r".*generated_not_to_break_here",
+           "--exclude", r".*\?\?\?",
+           "--xml", "nim.xml", "nimcache"]
+        )
       )
 
 proc pushCsources() =
