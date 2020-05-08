@@ -1,6 +1,6 @@
 ## Part of 'koch' responsible for the documentation generation.
 
-import os, strutils, osproc, sets, pathnorm
+import os, strutils, osproc, sets, pathnorm, md5
 
 const
   gaCode* = " --doc.googleAnalytics:UA-48159761-1"
@@ -76,14 +76,29 @@ proc nimexec*(cmd: string) =
   # Consider using `nimCompile` instead
   exec findNim().quoteShell() & " " & cmd
 
+func getNimcache(input, args: string): string {.inline.} =
+  input & "_" & getMD5(args)
+
 proc nimCompile*(input: string, outputDir = "bin", mode = "c", options = "") =
-  let output = outputDir / input.splitFile.name.exe
-  let cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
+  let
+    output = outputDir / input.splitFile.name.exe
+    options =
+      if "nimcache" notin options:
+        options & " " & quoteShell("--nimcache:" & getNimcache(input, options))
+      else:
+        options
+    cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
   exec cmd
 
 proc nimCompileFold*(desc, input: string, outputDir = "bin", mode = "c", options = "") =
-  let output = outputDir / input.splitFile.name.exe
-  let cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
+  let
+    output = outputDir / input.splitFile.name.exe
+    options =
+      if "nimcache" notin options:
+        options & " " & quoteShell("--nimcache:" & getNimcache(input, options))
+      else:
+        options
+    cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
   execFold(desc, cmd)
 
 const
