@@ -521,7 +521,15 @@ proc runCI(cmd: string) =
   echo "runCI: ", cmd
   echo hostInfo()
   # boot without -d:nimHasLibFFI to make sure this still works
-  kochExecFold("Boot in release mode", "boot -d:release")
+  let coverage =
+    if getEnv("NIM_TEST_COVERAGE", "0") == "1":
+      "-d:coverage"
+    else:
+      ""
+  if coverage.len > 0:
+    kochExecFold("Boot in coverage mode", "boot " & coverage)
+  else:
+    kochExecFold("Boot in release mode", "boot -d:release")
 
   ## build nimble early on to enable remainder to depend on it if needed
   kochExecFold("Build Nimble", "nimble")
@@ -550,10 +558,22 @@ proc runCI(cmd: string) =
         execFold("build with -d:nimHasLibFFI", "nim $1 -d:release -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI])
         execFold("test with -d:nimHasLibFFI", "$1 $2 -r testament/testament --nim:$1 r tests/trunner.nim" % [nimFFI, backend])
 
-    execFold("Run nimdoc tests", "nim c -r nimdoc/tester")
-    execFold("Run nimpretty tests", "nim c -r nimpretty/tester.nim")
+    execFold("Run nimdoc tests", "nim c $1 -r nimdoc/tester" % coverage)
+    execFold("Run nimpretty tests", "nim c $1 -r nimpretty/tester.nim" % coverage)
     when defined(posix):
-      execFold("Run nimsuggest tests", "nim c -r nimsuggest/tester")
+      execFold("Run nimsuggest tests", "nim c $1 -r nimsuggest/tester" % coverage)
+
+    if coverage.len > 0:
+      execFold(
+        "Generate coverage data",
+        quoteShellCommand(
+          ["lcov", "-c", "-b", ".", "-d", "nimcache",
+           "--exclude", "*generated_not_to_break_here",
+           "--rc", "lcov_branch_coverage=1",
+           "--no-external", "--no-compat-libtool",
+           "-o", "nim.info"]
+         )
+      )
 
 proc pushCsources() =
   if not dirExists("../csources/.git"):
