@@ -1,0 +1,52 @@
+name: Coverage
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: 'Nim test coverage (Linux)'
+    runs-on: ubuntu-18.04
+    env:
+      NIM_TEST_COVERAGE: 1
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+      - name: 'Checkout csources'
+        uses: actions/checkout@v2
+        with:
+          repository: nim-lang/csources
+          path: csources
+
+      - name: 'Install node.js 12.x'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: 'Install dependencies'
+        run: |
+          sudo apt-fast update -qq
+          DEBIAN_FRONTEND='noninteractive' \
+            sudo apt-fast install --no-install-recommends -yq \
+              libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev \
+              valgrind libc6-dbg lcov
+      - name: 'Add build binaries to PATH'
+        shell: bash
+        run: echo "::add-path::${{ github.workspace }}/bin"
+
+      - name: 'Build csources'
+        shell: bash
+        run: make -C csources -j $(nproc) CC=gcc
+      - name: 'Build koch'
+        shell: bash
+        run: nim c koch
+      - name: 'Run CI'
+        shell: bash
+        run: ./koch runCI
+
+      - name: 'Show failed tests'
+        if: failure()
+        shell: bash
+        run: nim c -r tools/ci_testresults.nim
+
+      - name: 'Upload coverage data to codecov'
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./nim.info
