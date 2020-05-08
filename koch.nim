@@ -523,7 +523,8 @@ proc runCI(cmd: string) =
   # boot without -d:nimHasLibFFI to make sure this still works
   let coverage =
     if getEnv("NIM_TEST_COVERAGE", "0") == "1":
-      "-d:coverage"
+      # Disable stack trace and line trace to improve performance
+      "-d:coverage --stacktrace:off --linetrace:off"
     else:
       ""
   if coverage.len > 0:
