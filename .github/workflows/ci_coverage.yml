@@ -28,6 +28,7 @@ jobs:
               libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev \
               valgrind libc6-dbg
 
+          pip3 install --upgrade pip setuptools wheel
           pip3 install fastcov
       - name: 'Add build binaries to PATH'
         shell: bash
