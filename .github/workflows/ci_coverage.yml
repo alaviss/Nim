@@ -28,7 +28,7 @@ jobs:
               libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev \
               valgrind libc6-dbg
 
-          pip3 install gcovr
+          pip3 install fastcov
       - name: 'Add build binaries to PATH'
         shell: bash
         run: echo "::add-path::${{ github.workspace }}/bin"
@@ -51,4 +51,4 @@ jobs:
       - name: 'Upload coverage data to codecov'
         uses: codecov/codecov-action@v1
         with:
-          file: ./nim.xml
+          file: ./nim.info
