@@ -566,7 +566,7 @@ proc runCI(cmd: string) =
       execFold(
         "Generate coverage data",
         quoteShellCommand(
-          ["gcovr", "-j", "--root", ".",
+          ["python3", "-m", "gcovr", "-j", "--root", ".",
            "--object-directory", "nimcache",
            "--exclude", r".*generated_not_to_break_here",
            "--exclude", r".*\?\?\?",
