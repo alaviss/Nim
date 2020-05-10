@@ -594,7 +594,7 @@ proc runCI(cmd: string) =
                                   # successful branches, thus it doesn't make
                                   # sense to include them in the coverage report.
            "--include", getCurrentDir(),
-           "-n", "-d", "nimcache", "-l", "-o", "nim.info"]
+           "-b", "-n", "-d", "nimcache", "-l", "-o", "nim.info"]
         )
       )
 
