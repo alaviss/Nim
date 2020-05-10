@@ -577,10 +577,10 @@ proc runCI(cmd: string) =
         execFold("build with -d:nimHasLibFFI", "nim $1 $3 $4 -d:release -d:nimHasLibFFI -o:$2 compiler/nim.nim" % [backend, nimFFI, quoteShell("--nimcache:" & getNimcache("compiler/nim", "ffi")), coverage])
         execFold("test with -d:nimHasLibFFI", "$1 $2 $3 $4 -r testament/testament --nim:$1 r tests/trunner.nim $4" % [nimFFI, backend, quoteShell("--nimcache:" & getNimcache("testament/testament", "ffi")), coverage])
 
-    execFold("Run nimdoc tests", "nim c $1 $2 -r nimdoc/tester" % [quoteShell("--nimcache:" & getNimcache("compiler/nim", "ffi")), coverage])
-    execFold("Run nimpretty tests", "nim c $1 $2 -r nimpretty/tester.nim" % [quoteShell("--nimcache:" & getNimcache("compiler/nim", "ffi")), coverage])
+    execFold("Run nimdoc tests", "nim c $1 $2 -r nimdoc/tester" % [quoteShell("--nimcache:" & getNimcache("nimdoc/tester", "c")), coverage])
+    execFold("Run nimpretty tests", "nim c $1 $2 -r nimpretty/tester.nim" % [quoteShell("--nimcache:" & getNimcache("nimpretty/tester", "c")), coverage])
     when defined(posix):
-      execFold("Run nimsuggest tests", "nim c $1 $2 -r nimsuggest/tester" % [quoteShell("--nimcache:" & getNimcache("compiler/nim", "ffi")), coverage])
+      execFold("Run nimsuggest tests", "nim c $1 $2 -r nimsuggest/tester" % [quoteShell("--nimcache:" & getNimcache("nimsuggest/tester", "c")), coverage])
 
     if coverage.len > 0:
       buildDocs(coverage)
