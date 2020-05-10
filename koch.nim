@@ -571,7 +571,7 @@ proc runCI(cmd: string) =
            "--exclude", "???",
            "--include", getCurrentDir(),
            "--verbose",
-           "-n", "-g", "gcov-9", "-d", "nimcache", "-l", "-o", "nim.info"]
+           "-n", "-d", "nimcache", "-l", "-o", "nim.info"]
         )
       )
 

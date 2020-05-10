@@ -28,8 +28,12 @@ jobs:
               libcurl4-openssl-dev libgc-dev libsdl1.2-dev libsfml-dev \
               valgrind libc6-dbg
 
-          pip3 install --upgrade pip setuptools wheel
-          pip3 install fastcov
+          sudo python3 -m pip install --upgrade pip setuptools wheel
+          sudo python3 -m pip install fastcov
+
+          ln -sv "$(which gcc-9)" bin/gcc
+          ln -sv "$(which g++-9)" bin/g++
+          ln -sv "$(which gcov-9)" bin/gcov
       - name: 'Add build binaries to PATH'
         shell: bash
         run: echo "::add-path::${{ github.workspace }}/bin"
