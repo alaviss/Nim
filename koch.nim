@@ -593,8 +593,11 @@ proc runCI(cmd: string) =
            "--exclude", "tests/", # tests typically expects to only take
                                   # successful branches, thus it doesn't make
                                   # sense to include them in the coverage report.
+           "--exclude", "tester.nim", # Pretty sure we don't test the test runners,
+                                      # unless it's testament.
            "--include", getCurrentDir(),
-           "-b", "-n", "-d", "nimcache", "-l", "-o", "nim.info"]
+           "-B", "-A", "assert", "-A", "doAssert", "-A", "internalAssert",
+           "-n", "-d", "nimcache", "-l", "-o", "nim.info"]
         )
       )
 
