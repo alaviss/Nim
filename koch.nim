@@ -560,7 +560,14 @@ proc runCI(cmd: string) =
       execFold("Compile tester", "nim c -d:nimCoroutines --os:genode -d:posix --compileOnly testament/testament")
 
     # main bottleneck here
-    execFold("Run tester", "nim c -r $2 -d:nimCoroutines $1 testament/testament --pedantic all -d:nimCoroutines $1" % [coverage, quoteShell("--nimcache:" & getNimcache("testament/testament", "c"))], allowFailure = coverage.len > 0)
+    execFold(
+      "Run tester",
+      "nim c -r $2 -d:nimCoroutines $1 testament/testament --pedantic $3 all -d:nimCoroutines $1" % [
+        coverage, quoteShell "--nimcache:" & getNimcache("testament/testament", "c"),
+        if coverage.len > 0: "--megatest:off" else: ""
+      ],
+      allowFailure = coverage.len > 0
+    )
     block CT_FFI:
       when defined(posix): # windows can be handled in future PR's
         execFold("nimble install -y libffi", "nimble install -y libffi")
