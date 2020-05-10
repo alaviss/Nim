@@ -31,8 +31,8 @@ proc failedAssertImpl*(msg: string) {.raises: [], tags: [].} =
 template assertImpl(cond: bool, msg: string, expr: string, enabled: static[bool]) =
   when enabled:
     const
-      loc = instantiationInfo(fullPaths = compileOption("excessiveStackTrace"))
-      ploc = $loc
+      loc = instantiationInfo(fullPaths = true)
+      ploc = $instantiationInfo(fullPaths = compileOption("excessiveStackTrace"))
     bind instantiationInfo
     mixin failedAssertImpl
     {.line: loc.}:
