@@ -214,7 +214,7 @@ macro inEnumWithHoles[U: Ordinal](T: typedesc[enum], v: U): bool =
   else:
     var matcher: NimNode
     let enumDef = getType(T)
-    for i in enumDef.findChild(it.kind == nnkEnumty):
+    for i in enumDef.findChild(it.kind == nnkEnumTy):
       if i.kind != nnkEmpty:
         let match = newCall(eq, newOrdLit i, value)
         if matcher.isNil:
