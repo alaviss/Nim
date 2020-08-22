@@ -13,6 +13,7 @@
 ## Unstable API.
 
 import std/private/since
+import fenv
 export system.`$` # for backward compatibility
 
 proc name*(t: typedesc): string {.magic: "TypeTrait".}
@@ -185,3 +186,102 @@ since (1, 1):
 
     type T2 = T
     genericParamsImpl(T2)
+
+macro inEnumWithHoles[U: Ordinal](T: typedesc[enum], v: U): bool =
+  let
+    eq = bindSym("==", brOpen)
+    le = bindSym("<=", brOpen)
+    ge = bindSym(">=", brOpen)
+    `or` = bindSym"or"
+    `and` = bindSym"and"
+    ord = bindSym"ord"
+
+  let value = genSym()
+  result = newStmtList(
+    newLetStmt(value, newCall(ord, v))
+  )
+
+  template newOrdLit(lit: untyped): NimNode =
+    if lit.kind != nnkSym:
+      newCall(ord, newLit lit)
+    else:
+      newCall(ord, lit)
+
+  when T is Ordinal:
+    result.add newCall(`and`,
+                       newCall(ge, value, newOrdLit T.low),
+                       newCall(le, value, newOrdLit T.high))
+  else:
+    var matcher: NimNode
+    let enumDef = getType(T)
+    for i in enumDef.findChild(it.kind == nnkEnumty):
+      if i.kind != nnkEmpty:
+        let match = newCall(eq, newOrdLit i, value)
+        if matcher.isNil:
+          matcher = match
+        else:
+          matcher = newCall(`or`, matcher, match)
+    result.add matcher
+
+func contains*[U, V: SomeOrdinal](T: typedesc[U], v: V): bool
+                                 {.inline, since: (1, 3, 5).} =
+  ## Check whether `v` is within the range of type `T`.
+  runnableExamples:
+    doAssert -42 notin uint
+    doAssert 420 in int
+    doAssert 256 notin uint8
+
+    type
+      E {.pure.} = enum A, B, C
+
+    doAssert 0 in E
+    doAssert 42 notin E
+
+    type
+      H {.pure.} = enum A = -42, B = 42, C
+
+    doAssert -42 in H
+    doAssert 0 notin H
+
+  when T is Ordinal:
+    v.ord >= T.low.ord and v.ord <= T.high.ord
+  else:
+    inEnumWithHoles(T, v)
+
+func contains*(T: typedesc[SomeFloat], v: T): bool
+              {.inline, since: (1, 3, 5).} =
+  ## Check whether `v` is within the range of type `T`.
+  runnableExamples:
+    import fenv
+    doAssert float64.maximumPositiveValue notin float32
+
+  v.abs >= T.minimumPositiveValue and v.abs <= T.maximumPositiveValue
+
+func contains*[U: Ordinal | enum](T: typedesc[range], v: U): bool
+                                 {.inline, since: (1, 3, 5).} =
+  ## Check whether `v` is within the range of type `T`.
+  runnableExamples:
+    doAssert -42 notin Natural
+    doAssert 42 in Positive
+    # Ordinals of different types can be checked as well.
+    doAssert 'a' in Positive
+
+    doAssert 'a' in range['a'..'z']
+    doAssert '0' notin range['a'..'z']
+
+    type
+      E = enum A, B, C, D
+
+    doAssert A in range[A..B]
+    doAssert A notin range[C..D]
+
+  v.ord >= T.low.ord and v.ord <= T.high.ord
+
+func contains*(T: typedesc[range], v: SomeFloat): bool
+              {.inline, since: (1, 3, 5).} =
+  ## Check whether `v` is within the range of type `T`.
+  runnableExamples:
+    doAssert 1.0 in range[1.0..3.0]
+    doAssert -1.0 notin range[1.0..3.0]
+
+  v >= T.low and v <= T.high
