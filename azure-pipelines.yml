@@ -51,8 +51,8 @@ jobs:
   pool:
     vmImage: $(vmImage)
 
-  ${{ if ne(variables.containerImage, '') }}:
-    container: ${{ variables.containerImage }}
+  $[ if ne(variables.containerImage, '') ]:
+    container: $[ variables.containerImage ]
 
   workspace:
     clean: all
@@ -121,7 +121,7 @@ jobs:
     - task: Cache@2
       inputs:
         key: <
-          csources | "$(Agent.OS)" | "${{ coalesce(variables.containerImage, 'none') }}" | $(CPU) | $(csources_version)
+          csources | "$(Agent.OS)" | "$[ coalesce(variables.containerImage, 'none') ]" | $(CPU) | $(csources_version)
         path: csources/bin
       displayName: 'Restore built csources'
 
