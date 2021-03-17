@@ -51,7 +51,7 @@ jobs:
   pool:
     vmImage: $(vmImage)
 
-  $[ if ne(variables.containerImage, '') ]:
+  ${{ if variables.containerImage }}:
     container: $[ variables.containerImage ]
 
   workspace:
