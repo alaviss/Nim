@@ -119,7 +119,7 @@ jobs:
 
     - task: Cache@2
       inputs:
-        key: 'csources | "$(Agent.OS)" | "${{ variables['containerImage'] }}" | $(CPU) | $(csources_version)'
+        key: 'csources | "$(Agent.OS)" | "${{ coalesce(variables['containerImage'], 'none') }}" | $(CPU) | $(csources_version)'
         path: csources/bin
       displayName: 'Restore built csources'
 
